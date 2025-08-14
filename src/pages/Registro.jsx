@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import Tiempo from '../componentes/Tiempo';
 import Seleccion from '../componentes/Seleccion';
+import { Button } from '@heroui/react';
 
 export default function Registro() {
   const [datosTiempo, setDatosTiempo] = useState(null);
-  const [categoria, setCategoria] = useState('animales'); // Cambia por frutas, etc.
+  const [categoria, setCategoria] = useState('Modelo'); // Cambia por frutas, etc.
   const [seleccionado, setSeleccionado] = useState('');
 
   const handleSubmit = (e) => {
@@ -14,15 +15,24 @@ export default function Registro() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-sm mx-auto p-4">
-      <Tiempo onChange={setDatosTiempo} />
-      <Seleccion nombre={categoria} onChange={setSeleccionado} />
-      <button
+    <form
+      onSubmit={handleSubmit}
+      className="max-w-sm mx-auto p-4 flex flex-col gap-4"
+    >
+      <div className="w-full">
+        <Tiempo onChange={setDatosTiempo} />
+      </div>
+
+      <div className="w-full">
+        <Seleccion nombre={categoria} onChange={setSeleccionado} />
+      </div>
+
+      <Button
         type="submit"
-        className="mt-4 bg-blue-500 text-white px-4 py-2 rounded"
+        className="w-full bg-blue-500 text-white px-4 py-2 rounded"
       >
         Enviar
-      </button>
+      </Button>
     </form>
   );
 }

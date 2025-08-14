@@ -30,7 +30,6 @@ export default function Seleccion({ nombre, onChange }) {
     <Select
       className="flex flex-col gap-4"
       label={cargando ? 'Cargando...' : `Seleccione ${nombre}`}
-      placeholder={cargando ? '...' : `Selecciona un ${nombre}`}
       onChange={(e) => onChange?.(e.target.value)}
     >
       {opciones.map((item) => (
