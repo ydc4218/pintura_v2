@@ -18,17 +18,30 @@ const seed = async () => {
   // Tomamos las columnas de la primera fila del Excel
   const columnas = Object.keys(datos[0]);
 
+  // Buscar la primera columna que contenga "nombre"
+  const colNombre = columnas.find((c) => c.toLowerCase().includes('nombre'));
+
   // 🔹 Crear tabla dinámica con columna "activo"
-  const columnasSQL = columnas.map((col) => `${col} TEXT`).join(', ');
+  const columnasSQL = columnas
+    .map((col) => {
+      if (col.toLowerCase().includes('nombre')) {
+        return `${col} TEXT UNIQUE`; // 👈 UNIQUE si tiene "nombre"
+      }
+      return `${col} TEXT`;
+    })
+    .join(', ');
+
   const idColumna = `id_${tabla}`;
   const activo = `activo_${tabla}`;
   const sqlCreate = `
-  CREATE TABLE IF NOT EXISTS ${tabla} (
-    ${idColumna} SERIAL PRIMARY KEY,
-    ${columnasSQL},
-    ${activo} CHAR(1) NOT NULL DEFAULT 'S' CHECK (${activo} IN ('S','N'))
-  )
-`;
+    CREATE TABLE IF NOT EXISTS ${tabla} (
+      ${idColumna} SERIAL PRIMARY KEY,
+      ${columnasSQL},
+      ${activo} CHAR(1) NOT NULL DEFAULT 'S' CHECK (${activo} IN ('S','N'))
+    )
+  `;
+
+  console.log(sqlCreate);
   await ConectarBaseDatos(sqlCreate);
 
   // 🔹 Insertar datos dinámicos
@@ -40,11 +53,18 @@ const seed = async () => {
     valores.push('S');
 
     const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ');
-    const sqlInsert = `
+    let sqlInsert = `
       INSERT INTO ${tabla} (${keys.join(', ')})
       VALUES (${placeholders})
-      ON CONFLICT DO NOTHING
     `;
+
+    // Si hay columna con "nombre", usarla en el ON CONFLICT
+    if (colNombre) {
+      sqlInsert += ` ON CONFLICT (${colNombre}) DO NOTHING`;
+    } else {
+      sqlInsert += ` ON CONFLICT DO NOTHING`;
+    }
+
     await ConectarBaseDatos(sqlInsert, valores);
   }
 
