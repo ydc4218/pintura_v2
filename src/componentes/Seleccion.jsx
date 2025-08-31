@@ -2,33 +2,28 @@ import { useState, useEffect } from 'react';
 import { Select, SelectItem } from '@heroui/react';
 import axios from 'axios';
 
-export default function Seleccion({ nombre, onChange, filtro }) {
+export default function Seleccion({ nombre, onChange, filtro, excluir = [], Disabled, Err }) {
   const [opciones, setOpciones] = useState([]);
   const [cargando, setCargando] = useState(false);
   const [idSeleccionado, setIdSeleccionado] = useState('');
 
   const nombreLower = nombre ? nombre.toLowerCase() : '';
 
-  // Cargar opciones
   useEffect(() => {
     if (!nombreLower) return;
 
     const fetchDatos = async () => {
       try {
         setCargando(true);
-        const url = filtro
-          ? `http://localhost:3000/api/${nombreLower}?tipo=${filtro}`
-          : `http://localhost:3000/api/${nombreLower}`;
+        const params = new URLSearchParams();
+        if (filtro) params.append('tipo', filtro);
+        if (excluir.length > 0) params.append('excluir', excluir.join(','));
+        const url = `http://localhost:3000/api/${nombreLower}?${params.toString()}`;
 
         const { data } = await axios.get(url);
         setOpciones(data || []);
-
-        // Limpiar selección si no existe en nuevas opciones
-        if (!data.some((item) => item.key === idSeleccionado)) {
-          setIdSeleccionado('');
-          onChange?.('');
-        }
-      } catch (e) {
+        // ⚡ NO limpiar idSeleccionado automáticamente
+      } catch {
         setOpciones([]);
         setIdSeleccionado('');
         onChange?.('');
@@ -38,10 +33,10 @@ export default function Seleccion({ nombre, onChange, filtro }) {
     };
 
     fetchDatos();
-  }, [nombreLower, filtro]);
+  }, [nombreLower, filtro, JSON.stringify(excluir)]);
 
-  const handleChange = (e) => {
-    const value = e.target.value;
+  const handleSelectionChange = (keys) => {
+    const value = Array.from(keys)[0] || '';
     setIdSeleccionado(value);
     onChange?.(value);
   };
@@ -49,16 +44,16 @@ export default function Seleccion({ nombre, onChange, filtro }) {
   return (
     <Select
       selectedKeys={idSeleccionado ? [idSeleccionado] : []}
-      value={idSeleccionado}
       label={nombre}
+      errorMessage={Err}
+      isInvalid={!!Err}
+      isDisabled={Disabled === null}
       placeholder={cargando ? 'Cargando...' : `Seleccione ${nombre}`}
-      onChange={handleChange}
+      onSelectionChange={handleSelectionChange}
       disabled={cargando || opciones.length === 0}
     >
       {opciones.map((item) => (
-        <SelectItem key={item.key} value={item.key}>
-          {item.label}
-        </SelectItem>
+        <SelectItem key={item.key}>{item.label}</SelectItem>
       ))}
     </Select>
   );

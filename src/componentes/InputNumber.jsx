@@ -1,11 +1,14 @@
 import { NumberInput } from '@heroui/react';
 
-export default function InputNumber() {
-
+export default function InputNumber({ Disabled, Err, onChange }) {
   return (
     <div className="flex flex-col gap-2">
       <NumberInput
         isWheelDisabled
+        isDisabled={Disabled === null}
+        errorMessage={Err}
+        isInvalid={!!Err}
+        onChange={onChange}
         minValue={1}
         endContent={
           <div className="flex items-center">

@@ -1,7 +1,7 @@
 {
   "name": "pintura",
   "private": true,
-  "version": "0.0.21",
+  "version": "0.0.27",
   "type": "module",
   "scripts": {
     "dev": "npm version patch --no-git-tag-version && vite",
@@ -12,6 +12,7 @@
     "all": "concurrently \"npm run dev\" \"npm run server\""
   },
   "dependencies": {
+    "@formkit/tempo": "0.1.2",
     "@heroui/react": "2.8.2",
     "axios": "1.11.0",
     "cors": "2.8.5",

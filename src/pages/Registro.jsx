@@ -1,178 +1,234 @@
 import { useState } from 'react';
 import Tiempo from '../componentes/Tiempo';
 import Seleccion from '../componentes/Seleccion';
-import { Button } from '@heroui/react';
+import { Button, Form } from '@heroui/react';
 import InputNumber from '../componentes/InputNumber';
-import SelectDefectos from '../componentes/SelectDefectos';
-import Number from '../componentes/Number';
+import Pieza from './Pieza';
+import { validarFormulario } from '../utils/Validar';
 
-export default function Registro() {
+export default function Registro({ setRegistroDirty }) {
   const [datosTiempo, setDatosTiempo] = useState(null);
-  const [cantidad, setCantidad] = useState(0);
-
+  const [lote, setLote] = useState(0);
   const [seleccionModelo, setSeleccionModelo] = useState('');
   const [seleccionTipo, setSeleccionTipo] = useState('');
 
-  // La primera pieza se maneja igual que antes
-  const [seleccionParte, setSeleccionParte] = useState('');
-  const [seleccionColor, setseleccionColor] = useState('');
-  const [inputConforme, setinputConforme] = useState('');
-  const [inputProducidas, setinputProducidas] = useState(0);
+  const [piezas, setPiezas] = useState([
+    {
+      parte: '',
+      color: '',
+      producidas: 0,
+      conforme: 0,
+      defectos: [],
+      errores: {},
+    },
+  ]);
+  const [partesIds, setPartesIds] = useState([]);
 
-  // Piezas adicionales (máximo 2 extras)
-  const [piezas, setPiezas] = useState([]);
+  const [InputError, setInputError] = useState({
+    ErrTiempo: '',
+    ErrModelo: '',
+    ErrTipo: '',
+    ErrPiezas: '',
+    ErrLote: '',
+  });
 
+  // ================================
+  // Función de submit
+  // ================================
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log({
-      tiempo: datosTiempo,
-      modelo: seleccionModelo,
-      tipo: seleccionTipo,
-      cantidad,
-      piezaPrincipal: {
-        parte: seleccionParte,
-        color: seleccionColor,
-        producidas: inputProducidas,
-        conforme: inputConforme,
-      },
-      piezasExtras: piezas,
+
+    const { ok, errores } = validarFormulario({
+      datosTiempo,
+      seleccionModelo,
+      seleccionTipo,
+      lote,
+      piezas,
+    });
+
+    if (!ok) {
+      // actualizar errores de piezas y campos generales
+      const piezasConErrores = piezas.map((p, i) => ({
+        ...p,
+        errores: errores.piezas?.[i] || {},
+      }));
+      setPiezas(piezasConErrores);
+
+      setInputError({
+        ErrTiempo: errores.ErrTiempo,
+        ErrModelo: errores.ErrModelo,
+        ErrTipo: errores.ErrTipo,
+        ErrLote: errores.ErrCantidad,
+        ErrPiezas: '', // opcional si quieres mensaje global
+      });
+      return;
+    }
+
+    // Aquí iría la lógica de envío del formulario
+    console.log('Formulario enviado correctamente', {
+      datosTiempo,
+      lote,
+      seleccionModelo,
+      seleccionTipo,
+      piezas,
     });
   };
 
+  // ================================
+  // Funciones para limpiar errores
+  // ================================
+  const clearError = (field) => {
+    setInputError((prev) => ({ ...prev, [field]: '' }));
+  };
+
   const handleModeloChange = (valor) => {
+    setDatosTiempo(new Date());
     setSeleccionModelo(valor);
+    setRegistroDirty(true);
+    if (valor) clearError('ErrModelo');
     setSeleccionTipo('');
-    setSeleccionParte('');
-    setPiezas([]);
+    setPiezas([
+      {
+        parte: '',
+        color: '',
+        producidas: 0,
+        conforme: 0,
+        defectos: [],
+        errores: {},
+      },
+    ]);
+    setPartesIds([]);
   };
 
   const handleTipoChange = (valor) => {
     setSeleccionTipo(valor);
-    setSeleccionParte('');
-    setPiezas([]);
+    if (valor) clearError('ErrTipo');
+    setPiezas([
+      {
+        parte: '',
+        color: '',
+        producidas: 0,
+        conforme: 0,
+        defectos: [],
+        errores: {},
+      },
+    ]);
+    setPartesIds([]);
   };
 
-  // Agregar pieza adicional
+  // ================================
+  // Función para actualizar piezas
+  // ================================
+  const actualizarPieza = (index, campo, valor) => {
+    const nuevas = [...piezas];
+    nuevas[index][campo] = valor;
+
+    // Recalcular IDs de partes seleccionadas
+    const ids = nuevas.map((p) => p.parte).filter((p) => p !== '');
+    setPartesIds(ids);
+
+    // Limpiar errores de la pieza actual
+    if (nuevas[index].errores?.[campo]) {
+      nuevas[index].errores[campo] = undefined;
+    }
+
+    setPiezas(nuevas);
+  };
+
+  // ================================
+  // Función para agregar piezas
+  // ================================
   const agregarPieza = () => {
-    if (piezas.length < 2) {
+    if (piezas.length < 3) {
       setPiezas([
         ...piezas,
-        { parte: '', color: '', producidas: 0, conforme: 0, defectos: [] },
+        {
+          parte: '',
+          color: '',
+          producidas: 0,
+          conforme: 0,
+          defectos: [],
+          errores: {},
+        },
       ]);
     }
   };
 
-  const actualizarPieza = (index, campo, valor) => {
-    const nuevas = [...piezas];
-    nuevas[index][campo] = valor;
-    setPiezas(nuevas);
-  };
-
+  // ================================
+  // Render
+  // ================================
   return (
-    <form
+    <Form
       onSubmit={handleSubmit}
-      className="max-w-sm mx-auto p-4 flex flex-col gap-4"
+      className="flex flex-col items-center justify-center w-full max-w-md mx-auto space-y-2"
     >
-      <div className="w-full">
-        <Tiempo onChange={setDatosTiempo} />
-      </div>
+      {/* Tiempo */}
+      <Tiempo
+        value={datosTiempo}
+        Err={InputError.ErrTiempo}
+        className="w-full"
+      />
 
-      <div className="w-full">
-        <Seleccion nombre="Modelo" onChange={handleModeloChange} />
-      </div>
-      <div className="w-full">
-        <InputNumber value={cantidad} onChange={setCantidad} />
-      </div>
+      {/* Modelo */}
+      <Seleccion
+        nombre="Modelo"
+        onChange={handleModeloChange}
+        className="w-full"
+        Err={InputError.ErrModelo}
+      />
 
-      <div className="w-full">
-        <Seleccion
-          nombre="Tipo"
-          onChange={handleTipoChange}
-          filtro={seleccionModelo}
-        />
-      </div>
+      {/* Lote */}
+      <InputNumber
+        value={lote}
+        onChange={setLote}
+        className="w-full"
+        Disabled={datosTiempo}
+        Err={InputError.ErrLote}
+      />
 
-      {/* --- Primera pieza (la original con condiciones) --- */}
-      {seleccionTipo && (
-        <>
-          <div className="w-full">
-            <Seleccion
-              nombre="Parte"
-              onChange={setSeleccionParte}
-              filtro={seleccionTipo}
-            />
-          </div>
-        </>
-      )}
-      {seleccionParte && (
-        <>
-          <div className="w-full">
-            <Seleccion nombre="Color" onChange={setseleccionColor} />
-          </div>
-          <Number nombre="Cantidad" onChange={setinputProducidas} />
-          <div className="w-full">
-            <Number
-              nombre="Conforme"
-              onChange={setinputConforme}
-              inputProducidas={inputProducidas}
-            />
-          </div>
-        </>
-      )}
-      {inputConforme && (
-        <>
-          <SelectDefectos nombre="Defectos" inputProducidas={inputProducidas} />
-        </>
-      )}
+      {/* Tipo */}
+      <Seleccion
+        nombre="Tipo"
+        onChange={handleTipoChange}
+        filtro={seleccionModelo}
+        className="w-full"
+        Disabled={datosTiempo}
+        Err={InputError.ErrTipo}
+      />
 
-      {/* --- Piezas adicionales --- */}
-      {piezas.map((pieza, index) => (
-        <div key={index} className="border p-3 rounded-lg space-y-2">
-          <Seleccion
-            nombre={`Parte extra ${index + 1}`}
-            onChange={(v) => actualizarPieza(index, 'parte', v)}
-            filtro={seleccionTipo}
+      {/* Piezas */}
+      {seleccionTipo &&
+        piezas.map((pieza, index) => (
+          <Pieza
+            key={index}
+            index={index}
+            pieza={pieza}
+            actualizarPieza={actualizarPieza}
+            seleccionTipo={seleccionTipo}
+            partesIds={partesIds}
+            className="w-full"
           />
-          <Seleccion
-            nombre="Color"
-            onChange={(v) => actualizarPieza(index, 'color', v)}
-          />
-          <Number
-            nombre="Cantidad"
-            onChange={(v) => actualizarPieza(index, 'producidas', v)}
-          />
-          <Number
-            nombre="Conforme"
-            onChange={(v) => actualizarPieza(index, 'conforme', v)}
-            inputProducidas={pieza.producidas}
-          />
-          {pieza.conforme > 0 && (
-            <SelectDefectos
-              nombre="Defectos"
-              inputProducidas={pieza.producidas}
-              onChange={(v) => actualizarPieza(index, 'defectos', v)}
-            />
-          )}
-        </div>
-      ))}
+        ))}
 
-      {/* --- Botón Agregar pieza SOLO cuando ya hay conforme y < 3 piezas en total --- */}
-      {Boolean(seleccionParte) && piezas.length < 2 && (
-        <Button
-          type="button"
-          onClick={agregarPieza}
-          className="w-full bg-green-500 text-white px-4 py-2 rounded"
-        >
-          Agregar pieza
-        </Button>
-      )}
+      {/* Botón agregar pieza */}
+      <Button
+        type="button"
+        onPress={agregarPieza}
+        className="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+        isDisabled={!(piezas.length < 3 && piezas.every((p) => p.parte))}
+      >
+        Agregar pieza
+      </Button>
 
+      {/* Botón enviar */}
       <Button
         type="submit"
-        className="w-full bg-blue-500 text-white px-4 py-2 rounded"
+        color="success"
+        isDisabled={partesIds.length === 0}
+        className="w-full px-4 py-2 rounded"
       >
         Enviar
       </Button>
-    </form>
+    </Form>
   );
 }

@@ -13,6 +13,10 @@ app.use(express.json());
 // Middleware de logging
 app.use(requestLogger);
 
+app.get('/health', (req, res) => {
+  res.status(200).send('ok');
+});
+
 // Rutas
 app.use('/api', routes);
 

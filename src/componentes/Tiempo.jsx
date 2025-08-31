@@ -1,27 +1,25 @@
-import { useState, useEffect } from 'react';
 import { TimeInput } from '@heroui/date-input';
-import { Input } from '@heroui/input';
 
-const getHoraActual = () => {
-  const date = new Date();
-  return {
-    hour: date.getHours(),
-    minute: date.getMinutes(),
-    second: date.getSeconds(),
-  };
-};
-
-export default function Tiempo({ onChange }) {
-  const [horaInicio] = useState(getHoraActual()); // inicio fijo
+export default function Tiempo({ value, Err }) {
+  // si no hay value (aún no llega la hora), queda vacío
+  const hora = value
+    ? {
+        hour: value.getHours(),
+        minute: value.getMinutes(),
+        second: value.getSeconds(),
+      }
+    : null;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="w-full">
       <TimeInput
         label="Hora Inicio"
-        value={horaInicio}
-        onChange={onChange}
+        value={hora}
         granularity="second"
         isReadOnly
+        isDisabled
+        errorMessage={Err}
+        isInvalid={!!Err}
       />
     </div>
   );
