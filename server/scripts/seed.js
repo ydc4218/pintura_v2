@@ -3,36 +3,41 @@ import XLSX from 'xlsx';
 
 const seed = async () => {
   // 🔹 Leer archivo Excel
-  const workbook = XLSX.readFile('./Datos.xlsx');
-  const sheetName = workbook.SheetNames[0]; // primera hoja
-  const sheet = workbook.Sheets[sheetName];
-  const datos = XLSX.utils.sheet_to_json(sheet); // array de objetos
+  const workbook = XLSX.readFile('./Datos.xlsx'); // Abrir archivo Excel
+  const sheetName = workbook.SheetNames[0]; // Tomar la primera hoja
+  const sheet = workbook.Sheets[sheetName]; // Obtener contenido de la hoja
+  const datos = XLSX.utils.sheet_to_json(sheet); // Convertir a array de objetos
 
-  const tabla = sheetName.toLowerCase(); // nombre de la hoja = nombre de la tabla
+  // 🔹 Usar el nombre de la hoja como nombre de la tabla
+  const tabla = sheetName.toLowerCase();
 
   if (!tabla || datos.length === 0) {
     console.error('No hay datos para insertar');
-    process.exit(1);
+    return; // Salir si no hay datos
   }
 
-  // Tomamos las columnas de la primera fila del Excel
+  // 🔹 Obtener nombres de columnas desde la primera fila
   const columnas = Object.keys(datos[0]);
 
-  // Buscar la primera columna que contenga "nombre"
+  // 🔹 Detectar si existe alguna columna que contenga "nombre"
+  // Esto servirá para aplicar restricción UNIQUE y ON CONFLICT
   const colNombre = columnas.find((c) => c.toLowerCase().includes('nombre'));
 
-  // 🔹 Crear tabla dinámica con columna "activo"
+  // 🔹 Construir definición SQL de columnas dinámicamente
   const columnasSQL = columnas
     .map((col) => {
       if (col.toLowerCase().includes('nombre')) {
-        return `${col} TEXT UNIQUE`; // 👈 UNIQUE si tiene "nombre"
+        return `${col} TEXT UNIQUE`; // Si es "nombre", aplicar UNIQUE
       }
-      return `${col} TEXT`;
+      return `${col} TEXT`; // Caso general: solo TEXT
     })
     .join(', ');
 
+  // 🔹 Definir nombre de columna ID y columna "activo"
   const idColumna = `id_${tabla}`;
   const activo = `activo_${tabla}`;
+
+  // 🔹 Crear tabla con columnas dinámicas
   const sqlCreate = `
     CREATE TABLE IF NOT EXISTS ${tabla} (
       ${idColumna} SERIAL PRIMARY KEY,
@@ -42,49 +47,56 @@ const seed = async () => {
   `;
 
   console.log(sqlCreate);
-  await ConectarBaseDatos(sqlCreate);
+  await ConectarBaseDatos(sqlCreate); // Ejecutar creación de la tabla
 
-  // 🔹 Insertar datos dinámicos
+  // 🔹 Insertar datos dinámicos fila por fila
   for (const row of datos) {
-    const keys = Object.keys(row);
-    const valores = Object.values(row);
+    const keys = Object.keys(row); // Columnas
+    const valores = Object.values(row); // Valores
 
+    // Agregar columna "activo" con valor por defecto "S"
     keys.push(activo);
     valores.push('S');
 
+    // Crear placeholders ($1, $2, $3, ...)
     const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ');
+
+    // SQL de inserción
     let sqlInsert = `
       INSERT INTO ${tabla} (${keys.join(', ')})
       VALUES (${placeholders})
     `;
 
-    // Si hay columna con "nombre", usarla en el ON CONFLICT
+    // Si existe columna "nombre", usarla en ON CONFLICT
     if (colNombre) {
       sqlInsert += ` ON CONFLICT (${colNombre}) DO NOTHING`;
     } else {
       sqlInsert += ` ON CONFLICT DO NOTHING`;
     }
 
+    // Ejecutar inserción
     await ConectarBaseDatos(sqlInsert, valores);
   }
 
   console.log(`Datos insertados en tabla "${tabla}" desde Excel 🚀`);
 
-  // 🔹 Exportar nuevamente la tabla a Excel (como respaldo)
+  // 🔹 Exportar nuevamente la tabla a Excel (respaldo)
   const registros = await ConectarBaseDatos(`SELECT * FROM ${tabla}`);
-  const hoja = XLSX.utils.json_to_sheet(registros);
-  const libro = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(libro, hoja, tabla);
+  const hoja = XLSX.utils.json_to_sheet(registros); // Convertir registros a hoja Excel
+  const libro = XLSX.utils.book_new(); // Crear nuevo libro
+  XLSX.utils.book_append_sheet(libro, hoja, tabla); // Agregar hoja
 
   const nombreArchivo = `./export_${tabla}.xlsx`;
-  XLSX.writeFile(libro, nombreArchivo);
+  XLSX.writeFile(libro, nombreArchivo); // Guardar archivo Excel
 
   console.log(`Tabla "${tabla}" exportada a ${nombreArchivo} ✅`);
 
-  process.exit();
+  // Cerrar proceso
+  return;
 };
 
+// Ejecutar script con manejo de errores
 seed().catch((err) => {
   console.error('Error en seed:', err);
-  process.exit(1);
+  return;
 });

@@ -1,8 +1,9 @@
 import { NumberInput } from '@heroui/react';
 
 export default function Number({ nombre, onChange, Disabled, Err }) {
-  const handleChange = ({ target: { value } }) => {
-    if (value !== null && value !== undefined) {
+  const handleChange = (e) => {
+    let value = e?.target?.value || '';
+    if (value !== null && value !== undefined && value !== '') {
       onChange(value); // convierte en número limpio
     }
   };

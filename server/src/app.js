@@ -1,8 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import routes from './routes/index.js';
-import { requestLogger } from './middlewares/logger.js';
-import { errorHandler } from './middlewares/errorHandler.js';
+import { requestLogger, errorHandler } from './middlewares/loggerMiddleware.js';
 
 const app = express();
 
@@ -10,15 +9,17 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Middleware de logging
-app.use(requestLogger);
-
 app.get('/health', (req, res) => {
   res.status(200).send('ok');
 });
 
+// Middleware de logging
+app.use(requestLogger);
+
 // Rutas
 app.use('/api', routes);
+
+app.use(errorHandler);
 
 // Middleware de errores
 app.use(errorHandler);

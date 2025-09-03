@@ -10,6 +10,7 @@ export function validarFormulario({
     ErrModelo: '',
     ErrTipo: '',
     ErrCantidad: '',
+    ErrLote: '',
     piezas: {}, // errores específicos por pieza
   };
 
@@ -17,8 +18,9 @@ export function validarFormulario({
   if (datosTiempo === null || datosTiempo === undefined) errores.ErrTiempo = '';
   if (!seleccionModelo) errores.ErrModelo = '';
   if (!seleccionTipo) errores.ErrTipo = '';
-  if (lote !== undefined && lote !== null && lote <= 0)
-    errores.ErrCantidad = 'Debe ingresar un número de lote.';
+  if (lote === null || lote <= 0) {
+    errores.ErrLote = 'Debe ingresar un lote válido.';
+  }
 
   // Validar piezas
   if (piezas && piezas.length > 0) {
@@ -29,17 +31,18 @@ export function validarFormulario({
       if (p.parte) {
         errores.piezas[i] = {};
 
-        // Color
-        if (p.color !== undefined && p.color !== null && p.color !== '') {
-          // ok
-        } else if (p.color !== undefined && p.color !== null) {
-          errores.piezas[i].color = 'Debe seleccionar el color';
+        // ✅ Validar color SOLO en la primera pieza (índice 0)
+        if (i === 0) {
+          if (p.color === undefined || p.color === null || p.color === '') {
+            errores.piezas[i].color = 'Debe seleccionar el color';
+          }
         }
 
         // Producidas
         if (
           p.producidas !== undefined &&
           p.producidas !== null &&
+          p.producidas !== '' &&
           p.producidas > 0
         ) {
           // ok
@@ -48,7 +51,12 @@ export function validarFormulario({
         }
 
         // Conforme
-        if (p.conforme !== undefined && p.conforme !== null && p.conforme > 0) {
+        if (
+          p.conforme !== undefined &&
+          p.conforme !== null &&
+          p.conforme > 0 &&
+          p.conforme !== ''
+        ) {
           if (p.producidas && p.conforme > p.producidas) {
             errores.piezas[i].conforme =
               'Conformes deben ser iguales o menores a producidas';

@@ -1,11 +1,20 @@
 import ConectarBaseDatos from '../config/DB.js';
-import { GetPinturaColors } from '../SQL/Consultas.js';
-import { Tabla_Modelo } from '../SQL/Modelos.js';
+import { Tabla_Baches } from '../SQL/Modelos.js';
+import { Tabla_Defectos } from '../SQL/Modelos.js';
+import { Tabla_Reg_tiempos } from '../SQL/Modelos.js';
 
-export const Color = async () => {
+
+
+
+
+
+
+
+export const SendDatos = async () => {
   try {
     const rows = await ConectarBaseDatos(
-      GetPinturaColors,
+      `SELECT id_color_pintura, nombre_color FROM color_pintura 
+      WHERE activo_color_pintura = $1 ORDER BY nombre_color`,
       ['S'],
       Tabla_Modelo
     );

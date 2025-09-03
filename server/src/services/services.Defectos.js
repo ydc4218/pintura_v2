@@ -1,12 +1,12 @@
 // services/services.models.js
 import ConectarBaseDatos from '../config/DB.js';
+import { GetDefectosPintura } from '../SQL/Consultas.js';
 import { Tabla_Modelo } from '../SQL/Modelos.js';
 
 export const Defectos = async () => {
   try {
     const rows = await ConectarBaseDatos(
-      `SELECT id_defectos_pintura, nombre_defecto FROM defectos_pintura 
-      WHERE activo_defectos_pintura = $1 ORDER BY nombre_defecto`,
+      GetDefectosPintura,
       ['S'],
       Tabla_Modelo
     );

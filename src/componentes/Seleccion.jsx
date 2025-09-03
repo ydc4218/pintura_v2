@@ -1,8 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Select, SelectItem } from '@heroui/react';
 import axios from 'axios';
+const apiUrl = import.meta.env.VITE_API_URL;
 
-export default function Seleccion({ nombre, onChange, filtro, excluir = [], Disabled, Err }) {
+export default function Seleccion({
+  nombre,
+  onChange,
+  filtro,
+  excluir = [],
+  Disabled,
+  Err,
+}) {
   const [opciones, setOpciones] = useState([]);
   const [cargando, setCargando] = useState(false);
   const [idSeleccionado, setIdSeleccionado] = useState('');
@@ -10,6 +18,7 @@ export default function Seleccion({ nombre, onChange, filtro, excluir = [], Disa
   const nombreLower = nombre ? nombre.toLowerCase() : '';
 
   useEffect(() => {
+    setIdSeleccionado('');
     if (!nombreLower) return;
 
     const fetchDatos = async () => {
@@ -18,7 +27,7 @@ export default function Seleccion({ nombre, onChange, filtro, excluir = [], Disa
         const params = new URLSearchParams();
         if (filtro) params.append('tipo', filtro);
         if (excluir.length > 0) params.append('excluir', excluir.join(','));
-        const url = `http://localhost:3000/api/${nombreLower}?${params.toString()}`;
+        const url = `${apiUrl}${nombreLower}?${params.toString()}`;
 
         const { data } = await axios.get(url);
         setOpciones(data || []);
@@ -46,6 +55,7 @@ export default function Seleccion({ nombre, onChange, filtro, excluir = [], Disa
       selectedKeys={idSeleccionado ? [idSeleccionado] : []}
       label={nombre}
       errorMessage={Err}
+      defaultSelectedKeys={[]}
       isInvalid={!!Err}
       isDisabled={Disabled === null}
       placeholder={cargando ? 'Cargando...' : `Seleccione ${nombre}`}

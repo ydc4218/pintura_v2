@@ -37,7 +37,7 @@ export default function Registro({ setRegistroDirty }) {
   // ================================
   const handleSubmit = (e) => {
     e.preventDefault();
-
+    console.log(lote);
     const { ok, errores } = validarFormulario({
       datosTiempo,
       seleccionModelo,
@@ -58,7 +58,7 @@ export default function Registro({ setRegistroDirty }) {
         ErrTiempo: errores.ErrTiempo,
         ErrModelo: errores.ErrModelo,
         ErrTipo: errores.ErrTipo,
-        ErrLote: errores.ErrCantidad,
+        ErrLote: errores.ErrLote,
         ErrPiezas: '', // opcional si quieres mensaje global
       });
       return;
@@ -78,6 +78,7 @@ export default function Registro({ setRegistroDirty }) {
   // Funciones para limpiar errores
   // ================================
   const clearError = (field) => {
+    console.log(field)
     setInputError((prev) => ({ ...prev, [field]: '' }));
   };
 
@@ -116,6 +117,12 @@ export default function Registro({ setRegistroDirty }) {
     setPartesIds([]);
   };
 
+  const handleLoteChange = (valor) => {
+    setLote(valor);
+    if (valor) clearError('ErrLote');
+  
+  };
+
   // ================================
   // Función para actualizar piezas
   // ================================
@@ -144,7 +151,7 @@ export default function Registro({ setRegistroDirty }) {
         ...piezas,
         {
           parte: '',
-          color: '',
+          Lote: '',
           producidas: 0,
           conforme: 0,
           defectos: [],
@@ -180,7 +187,7 @@ export default function Registro({ setRegistroDirty }) {
       {/* Lote */}
       <InputNumber
         value={lote}
-        onChange={setLote}
+        onChange={handleLoteChange}
         className="w-full"
         Disabled={datosTiempo}
         Err={InputError.ErrLote}

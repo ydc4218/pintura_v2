@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+const apiUrl = import.meta.env.VITE_API_HEALTH;
 
 export default function BackendStatus() {
   const [isOnline, setIsOnline] = useState(false);
@@ -6,7 +7,7 @@ export default function BackendStatus() {
   useEffect(() => {
     const checkBackend = async () => {
       try {
-        const res = await fetch('http://localhost:3000/health');
+        const res = await fetch(`${apiUrl}`);
         setIsOnline(res.ok);
       } catch (err) {
         setIsOnline(false);

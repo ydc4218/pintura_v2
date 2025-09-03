@@ -1,5 +1,6 @@
 // services/services.models.js
 import ConectarBaseDatos from '../config/DB.js';
+import { GetPartesByTipo } from '../SQL/Consultas.js';
 import { Tabla_Tipo } from '../SQL/Modelos.js';
 
 export const TipoById = async (Id_Parte) => {
@@ -7,11 +8,7 @@ export const TipoById = async (Id_Parte) => {
   // excluir debería ser un array de IDs numéricos
 
   try {
-    let query = `
-      SELECT id_partes_pintura, nombre_parte 
-      FROM partes_pintura 
-      WHERE activo_partes_pintura = $1 AND tipo_parte = $2
-    `;
+    let query = GetPartesByTipo;
     const params = ['S', tipo];
 
     if (excluir) {

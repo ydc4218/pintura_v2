@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Select, SelectItem, NumberInput } from '@heroui/react';
+import { Select, SelectItem, NumberInput, Button } from '@heroui/react';
 import axios from 'axios';
+import ConfirmarEliminar from './ConfirmarEliminar';
+const apiUrl = import.meta.env.VITE_API_URL;
 
 export default function SelectDefectos({
   nombre,
@@ -9,6 +11,7 @@ export default function SelectDefectos({
   value = [],
 }) {
   const [opciones, setOpciones] = useState([]);
+  const [ordenOriginal, setOrdenOriginal] = useState([]); // 🔹 guardamos orden de la API
   const [cargando, setCargando] = useState(false);
   const [seleccionados, setSeleccionados] = useState(value || []); // [{ id, label, cantidad }]
 
@@ -20,12 +23,12 @@ export default function SelectDefectos({
     const fetchDatos = async () => {
       try {
         setCargando(true);
-        const { data } = await axios.get(
-          `http://localhost:3000/api/${nombreLower}`
-        );
+        const { data } = await axios.get(`${apiUrl}${nombreLower}`);
         setOpciones(data || []);
+        setOrdenOriginal(data || []); // 🔹 guardamos la lista inicial como referencia
       } catch (e) {
         setOpciones([]);
+        setOrdenOriginal([]);
       } finally {
         setCargando(false);
       }
@@ -43,54 +46,74 @@ export default function SelectDefectos({
     setOpciones((prev) => prev.filter((o) => o.key !== id));
   };
 
+  const handleEliminarDefecto = (id, label) => {
+    setSeleccionados((prev) => prev.filter((d) => d.id !== id));
+
+    // 🔹 reinsertamos el defecto y luego reordenamos según ordenOriginal
+    setOpciones((prev) => {
+      const nuevasOpciones = [...prev, { key: id, label }];
+      return nuevasOpciones.sort(
+        (a, b) =>
+          ordenOriginal.findIndex((o) => o.key === a.key) -
+          ordenOriginal.findIndex((o) => o.key === b.key)
+      );
+    });
+  };
+
   const handleCantidadChange = (id, cantidad) => {
-    // Convertimos a número, si no, se vuelve NaN
-    const cantidadNum = Number(cantidad) || 0;
     setSeleccionados((prev) =>
-      prev.map((d) => (d.id === id ? { ...d, cantidad: cantidadNum } : d))
+      prev.map((d) =>
+        d.id === id
+          ? {
+              ...d,
+              cantidad:
+                cantidad === '' || cantidad === null ? null : Number(cantidad),
+            }
+          : d
+      )
     );
   };
 
-return (
-  <div className="flex flex-col gap-2">
-    <Select
-      className="w-full"
-      aria-label="Defectos"
-      selectedKeys={
-        seleccionados && seleccionados[0] && seleccionados[0].key != null
-          ? [String(seleccionados[0].key)]
-          : []
-      }
-      placeholder={cargando ? 'Cargando...' : 'Seleccione o agregue defecto'}
-      disabled={cargando || opciones.length === 0}
-      onSelectionChange={(keys) => {
-        const key = Array.from(keys)[0];
 
-        if (!key) {
-          setSeleccionados([]);
-          return;
-        }
-
-        const opcion = opciones.find((o) => String(o.key) === String(key));
-        if (opcion) handleAgregarDefecto(opcion.key, opcion.label);
-      }}
-    >
-      {opciones.map((op) => (
-        <SelectItem key={op.key}>{op.label}</SelectItem>
-      ))}
-    </Select>
-
-    {seleccionados.map((defecto) => (
-      <NumberInput
+  return (
+    <div className="flex flex-col gap-2">
+      <Select
         className="w-full"
-        key={defecto.id}
-        label={defecto.label}
-        minValue={0}
-        maxValue={inputProducidas}
-        onChange={(v) => handleCantidadChange(defecto.id, v)}
-        isWheelDisabled
-      />
-    ))}
-  </div>
-);
+        aria-label="Defectos"
+        selectedKeys={[]}
+        placeholder={cargando ? 'Cargando...' : 'Seleccione o agregue defecto'}
+        disabled={cargando || opciones.length === 0}
+        onSelectionChange={(keys) => {
+          const key = Array.from(keys)[0];
+          if (!key) return;
+
+          const opcion = opciones.find((o) => String(o.key) === String(key));
+          if (opcion) handleAgregarDefecto(opcion.key, opcion.label);
+        }}
+      >
+        {opciones.map((op) => (
+          <SelectItem key={op.key}>{op.label}</SelectItem>
+        ))}
+      </Select>
+
+      {seleccionados.map((defecto) => (
+        <div key={defecto.id} className="flex items-center gap-2">
+          <ConfirmarEliminar
+            label={defecto.label}
+            onConfirm={() => handleEliminarDefecto(defecto.id, defecto.label)}
+          />
+
+          <NumberInput
+            className="flex-1"
+            label={defecto.label}
+            size="sm"
+            minValue={1}
+            maxValue={inputProducidas}
+            onChange={(v) => handleCantidadChange(defecto.id, v)}
+            isWheelDisabled
+          />
+        </div>
+      ))}
+    </div>
+  );
 }

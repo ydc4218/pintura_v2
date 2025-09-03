@@ -30,6 +30,7 @@ export default function Pieza({
       </div>
 
       {/* Selección de Parte */}
+
       <Seleccion
         nombre="Parte"
         onChange={(v) => handleActualizar('parte', v)}
@@ -41,13 +42,15 @@ export default function Pieza({
 
       {pieza.parte && (
         <>
-          {/* Selección de Color */}
-          <Seleccion
-            nombre="Color"
-            onChange={(v) => handleActualizar('color', v)}
-            value={pieza.color}
-            Err={pieza.errores?.color}
-          />
+          {/* Selección de Color , segunda pieza no lleva color*/}
+          {index === 0 && (
+            <Seleccion
+              nombre="Color"
+              onChange={(v) => handleActualizar('color', v)}
+              value={pieza.color}
+              Err={pieza.errores?.color}
+            />
+          )}
 
           {/* Número de producidas */}
           <Number

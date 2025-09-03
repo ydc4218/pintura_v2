@@ -1,11 +1,12 @@
 // services/services.models.js
 import ConectarBaseDatos from '../config/DB.js';
+import { GetModelo } from '../SQL/Consultas.js';
 import { Tabla_Modelo } from '../SQL/Modelos.js';
 
 export const Models = async () => {
   try {
     const rows = await ConectarBaseDatos(
-      'SELECT id_modelo, nombre_modelo FROM modelos WHERE activo = $1 ORDER BY nombre_modelo',
+      GetModelo,
       ['S'],
       Tabla_Modelo
     );

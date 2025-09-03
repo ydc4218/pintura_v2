@@ -1,6 +1,28 @@
+import { useState } from 'react';
 import { NumberInput } from '@heroui/react';
 
 export default function InputNumber({ Disabled, Err, onChange }) {
+  const [numero, setNumero] = useState('');
+  const [adicional, setAdicional] = useState('');
+
+  const buildValue = (num, add) => {
+    if (num && add) return `${num}-${add}`;
+    if (num) return num;
+    if (add) return add;
+    return '';
+  };
+
+  const handleNumeroChange = (value) => {
+    setNumero(value);
+    onChange?.(buildValue(value, adicional));
+  };
+
+  const handleSelectChange = (e) => {
+    const value = e.target.value;
+    setAdicional(value);
+    onChange?.(buildValue(numero, value));
+  };
+
   return (
     <div className="flex flex-col gap-2">
       <NumberInput
@@ -8,40 +30,32 @@ export default function InputNumber({ Disabled, Err, onChange }) {
         isDisabled={Disabled === null}
         errorMessage={Err}
         isInvalid={!!Err}
-        onChange={onChange}
+        onChange={handleNumeroChange}
         minValue={1}
         endContent={
           <div className="flex items-center">
-            <label className="sr-only" htmlFor="currency">
-              Currency
+            <label className="sr-only" htmlFor="adicional">
+              Adicional
             </label>
             <select
               aria-label="Select adicional"
-              className="outline-solid outline-transparent border-0 bg-transparent "
+              className="outline-none border-0 bg-transparent"
               id="adicional"
               name="adicional"
+              value={adicional}
+              onChange={handleSelectChange}
             >
-              <option aria-label="a" value="a"></option>
-              <option aria-label="a" value="a">
-                a
-              </option>
-              <option aria-label="b" value="b">
-                b
-              </option>
-              <option aria-label="c" value="c">
-                c
-              </option>
-              <option aria-label="d" value="d">
-                d
-              </option>
-              <option aria-label="pos" value="posventa">
-                posventa
-              </option>
+              <option value="">--</option>
+              <option value="a">a</option>
+              <option value="b">b</option>
+              <option value="c">c</option>
+              <option value="d">d</option>
+              <option value="posventa">posventa</option>
             </select>
           </div>
         }
         label="Lote"
-        placeholder="Ingrese el numero de lote"
+        placeholder="Ingrese el número de lote"
       />
     </div>
   );
