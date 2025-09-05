@@ -5,12 +5,16 @@ import { Button, Form } from '@heroui/react';
 import InputNumber from '../componentes/InputNumber';
 import Pieza from './Pieza';
 import { validarFormulario } from '../utils/Validar';
+import { RegistroSendData } from '../utils/RegistroSendData';
+import InputText from '../componentes/InputText';
 
 export default function Registro({ setRegistroDirty }) {
   const [datosTiempo, setDatosTiempo] = useState(null);
   const [lote, setLote] = useState(0);
   const [seleccionModelo, setSeleccionModelo] = useState('');
   const [seleccionTipo, setSeleccionTipo] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [observaciones, setObservaciones] = useState('');
 
   const [piezas, setPiezas] = useState([
     {
@@ -35,9 +39,9 @@ export default function Registro({ setRegistroDirty }) {
   // ================================
   // Función de submit
   // ================================
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(lote);
+
     const { ok, errores } = validarFormulario({
       datosTiempo,
       seleccionModelo,
@@ -65,20 +69,32 @@ export default function Registro({ setRegistroDirty }) {
     }
 
     // Aquí iría la lógica de envío del formulario
-    console.log('Formulario enviado correctamente', {
-      datosTiempo,
-      lote,
-      seleccionModelo,
-      seleccionTipo,
-      piezas,
-    });
+
+    try {
+      const horafinal = new Date(); // ⏰ capturar justo antes del envío
+      setLoading(true); // ⏳ empieza cargando
+      const data = await RegistroSendData({
+        datosTiempo,
+        horafinal,
+        observaciones,
+        lote,
+        seleccionModelo,
+        seleccionTipo,
+        piezas,
+      });
+      console.log('✅ Respuesta del backend:', data);
+    } catch (err) {
+      console.error('❌ Error enviando:', err);
+    } finally {
+      setLoading(false); // ✅ termina siempre
+    }
   };
 
   // ================================
   // Funciones para limpiar errores
   // ================================
   const clearError = (field) => {
-    console.log(field)
+    console.log(field);
     setInputError((prev) => ({ ...prev, [field]: '' }));
   };
 
@@ -120,7 +136,10 @@ export default function Registro({ setRegistroDirty }) {
   const handleLoteChange = (valor) => {
     setLote(valor);
     if (valor) clearError('ErrLote');
-  
+  };
+
+  const handleObservacionChange = (valor) => {
+    setObservaciones(valor);
   };
 
   // ================================
@@ -179,6 +198,7 @@ export default function Registro({ setRegistroDirty }) {
       {/* Modelo */}
       <Seleccion
         nombre="Modelo"
+        value={seleccionModelo}
         onChange={handleModeloChange}
         className="w-full"
         Err={InputError.ErrModelo}
@@ -196,6 +216,7 @@ export default function Registro({ setRegistroDirty }) {
       {/* Tipo */}
       <Seleccion
         nombre="Tipo"
+        value={seleccionTipo}
         onChange={handleTipoChange}
         filtro={seleccionModelo}
         className="w-full"
@@ -217,6 +238,8 @@ export default function Registro({ setRegistroDirty }) {
           />
         ))}
 
+      <InputText onChange={handleObservacionChange} />
+
       {/* Botón agregar pieza */}
       <Button
         type="button"
@@ -231,10 +254,11 @@ export default function Registro({ setRegistroDirty }) {
       <Button
         type="submit"
         color="success"
-        isDisabled={partesIds.length === 0}
+        isDisabled={loading || partesIds.length === 0}
+        isLoading={loading} // HeroUI spinner automático
         className="w-full px-4 py-2 rounded"
       >
-        Enviar
+        {loading ? 'Enviando...' : 'Enviar'}
       </Button>
     </Form>
   );

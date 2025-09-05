@@ -10,15 +10,14 @@ export default function Seleccion({
   excluir = [],
   Disabled,
   Err,
+  value = '', // 🔹 lo recibimos desde el padre
 }) {
   const [opciones, setOpciones] = useState([]);
   const [cargando, setCargando] = useState(false);
-  const [idSeleccionado, setIdSeleccionado] = useState('');
 
   const nombreLower = nombre ? nombre.toLowerCase() : '';
 
   useEffect(() => {
-    setIdSeleccionado('');
     if (!nombreLower) return;
 
     const fetchDatos = async () => {
@@ -31,10 +30,8 @@ export default function Seleccion({
 
         const { data } = await axios.get(url);
         setOpciones(data || []);
-        // ⚡ NO limpiar idSeleccionado automáticamente
       } catch {
         setOpciones([]);
-        setIdSeleccionado('');
         onChange?.('');
       } finally {
         setCargando(false);
@@ -46,16 +43,15 @@ export default function Seleccion({
 
   const handleSelectionChange = (keys) => {
     const value = Array.from(keys)[0] || '';
-    setIdSeleccionado(value);
     onChange?.(value);
   };
 
   return (
     <Select
-      selectedKeys={idSeleccionado ? [idSeleccionado] : []}
+      selectedKeys={value ? [value] : []} // 🔹 usar `value` desde el padre
       label={nombre}
       errorMessage={Err}
-      defaultSelectedKeys={[]}
+      defaultSelectedKeys={[]} // 🔹 ya no es necesario
       isInvalid={!!Err}
       isDisabled={Disabled === null}
       placeholder={cargando ? 'Cargando...' : `Seleccione ${nombre}`}

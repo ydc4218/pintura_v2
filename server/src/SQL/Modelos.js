@@ -21,25 +21,24 @@ export const TablaLogs = `
     `;
 
 export const Tabla_Tipo = `
-CREATE TABLE IF NOT EXISTS pintura_tipo_pieza_lista (
+CREATE TABLE IF NOT EXISTS pin_tipo_lista (
     id_tipo SERIAL PRIMARY KEY,
     nombre_tipo TEXT NOT NULL UNIQUE,
     activo CHAR(1) NOT NULL DEFAULT 'S' CHECK (activo IN ('S', 'N'))
 );
 `;
 export const Tabla_Baches = `
-CREATE TABLE IF NOT EXISTS pintura_baches (
-    id_bache SERIAL PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS pin_baches (
+    id_baches SERIAL PRIMARY KEY,
     modelo_id INT NOT NULL,           -- FK hacia tabla modelo
     parte_id INT NOT NULL,            -- FK hacia tabla parte
     tipo_pieza_id INT,                -- FK hacia tabla tipo_pieza
     color_id INT,                     -- FK hacia tabla color
-    modelo_lote VARCHAR(100),         -- Código o referencia de modelo/lote
     fecha DATE NOT NULL,              -- Fecha de registro
     hora_inicio TIME NOT NULL,        -- Hora de inicio
     hora_final TIME NOT NULL,         -- Hora de finalización
     duracion INTERVAL,                -- Duración calculada o registrada
-    lote VARCHAR(50),                 -- Número o referencia de lote
+    lote VARCHAR(15),                 -- Número o referencia de lote
     producidas INT DEFAULT 0,         -- Cantidad producida
     conforme INT DEFAULT 0,           -- Cantidad conforme
     observaciones TEXT                -- Comentarios u observaciones
@@ -47,9 +46,9 @@ CREATE TABLE IF NOT EXISTS pintura_baches (
 `;
 
 export const Tabla_Defectos = `
-CREATE TABLE IF NOT EXISTS pintura_defectos (
+CREATE TABLE IF NOT EXISTS pin_defectos (
     id_defecto SERIAL PRIMARY KEY,
-    id_bache INT NOT NULL,            -- FK hacia tabla baches
+    id_baches INT NOT NULL,            -- FK hacia tabla baches
     parte_id INT NOT NULL,            -- FK hacia tabla parte
     defecto_id INT NOT NULL,          -- FK hacia tabla catalogo de defectos
     cantidad INT DEFAULT 0,           -- Cantidad de piezas con defecto
@@ -58,22 +57,31 @@ CREATE TABLE IF NOT EXISTS pintura_defectos (
 `;
 
 export const Tabla_Reg_tiempos = `
-CREATE TABLE IF NOT EXISTS pintura_reg_tiempos (
+CREATE TABLE IF NOT EXISTS pin_reg_tiempos (
     id_reg_tiempo SERIAL PRIMARY KEY,
-    id_bache INT NOT NULL,            -- FK hacia tabla baches
+    id_baches INT NOT NULL,            -- FK hacia tabla baches
     parte_id INT NOT NULL,            -- FK hacia tabla parte
     hora_inicio TIME NOT NULL,        -- Hora de inicio
     hora_final TIME NOT NULL,         -- Hora de finalización
     duracion INTERVAL,                -- Duración calculada o registrada
-    producidas INT DEFAULT 0          -- Cantidad de piezas producidas
+    producidas INT DEFAULT 0,         -- Cantidad de piezas producidas
+    evento VARCHAR(50) NOT NULL       -- Inicio Producción | Paro | Cambio de color
 );
 `;
 
 export const Tabla_Estados_Registro = `
-CREATE TABLE IF NOT EXISTS pintura_estados_registro (
+CREATE TABLE IF NOT EXISTS pin_estados (
     id_estado SERIAL PRIMARY KEY,
     nombre_estado VARCHAR(100) NOT NULL,             -- Nombre del estado
     activo CHAR(1) NOT NULL DEFAULT 'S'              -- 'S' = Sí, 'N' = No
            CHECK (activo IN ('S', 'N'))
+);
+`;
+
+export const Tabla_Hora_Registro = `
+CREATE TABLE IF NOT EXISTS tabla_hora_defectos (
+    id SERIAL PRIMARY KEY,
+    hora TIME NOT NULL DEFAULT '07:00:00', -- Hora fija para defectos
+    fecha DATE DEFAULT CURRENT_DATE        -- Fecha de referencia
 );
 `;

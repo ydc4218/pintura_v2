@@ -19,8 +19,6 @@ app.use(requestLogger);
 // Rutas
 app.use('/api', routes);
 
-app.use(errorHandler);
-
 // Middleware de errores
 app.use(errorHandler);
 
